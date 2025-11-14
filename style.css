@@ -186,3 +186,41 @@ body {
   background: var(--accent-active);
   transform: translateY(1px);
 }
+
+/* ==== MOBILE TWEAKS ==== */
+@media (max-width: 600px) {
+  /* allow the page to scroll a bit if needed on phones */
+  html,
+  body {
+    overflow: auto;
+  }
+
+  .calculator {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .display {
+    padding: 10px 12px;
+    min-height: 110px;          /* bigger display on phones */
+    max-height: 170px;
+    border-radius: 14px;
+  }
+
+  .expression {
+    font-size: clamp(0.85rem, 3vw, 1rem);
+  }
+
+  .result {
+    font-size: clamp(2.1rem, 7vw, 3rem);  /* much larger main number */
+  }
+
+  .keys {
+    gap: 4px;
+  }
+
+  .btn {
+    font-size: clamp(1.15rem, 4vw, 1.6rem);  /* bigger button labels */
+    border-radius: 14px;
+  }
+}
