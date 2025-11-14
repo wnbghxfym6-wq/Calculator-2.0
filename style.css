@@ -1,0 +1,188 @@
+/* ==== THEME ==== */
+:root {
+  /* make window bg and calculator bg the same
+     so there is no visible outer frame */
+  --bg: #171a21;
+  --panel: #171a21;
+
+  --display-bg: #0f1115;
+  --text: #f4f7fa;
+  --muted: #9ca3af;
+
+  --num: #1e2430;
+  --num-hover: #252c3b;
+  --num-active: #2c3447;
+
+  --func: #202733;
+  --func-hover: #2a3243;
+  --func-active: #323b50;
+
+  --op: #283246;
+  --op-hover: #313c53;
+  --op-active: #38445d;
+
+  --accent: #357ae8;
+  --accent-hover: #3e85ff;
+  --accent-active: #2f6ed9;
+}
+
+/* global box sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* window is the calculator background */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  overflow: hidden;
+}
+
+/* root fills window */
+#app-root {
+  width: 100%;
+  height: 100%;
+}
+
+/* calculator fills window, with just inner padding */
+.calculator {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  gap: 1px;
+}
+
+/* ==== DISPLAY AREA ==== */
+
+.display {
+  background: var(--display-bg);
+  border-radius: 16px;
+  padding: 12px 16px;
+  min-height: 70px;
+  max-height: 110px;
+  font-size: 2.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+
+  overflow: hidden;
+}
+
+.expression {
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+  text-align: right;
+}
+
+.result {
+  font-size: 2rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+  text-align: right;
+}
+
+/* ==== KEYS GRID ==== */
+
+.keys {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 1px;
+}
+
+/* ==== BUTTONS ==== */
+
+
+.btn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px; /* round, pill-style buttons */
+  color: #ffffff;
+  font-weight: 500;
+  font-size: clamp(1rem, 1.8vh, 1.3rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: background 120ms ease, transform 60ms ease;
+}
+
+/* zero spans two columns */
+.btn.zero {
+  grid-column: span 2;
+}
+
+/* types */
+.btn.num {
+  background: var(--num);
+}
+
+.btn.func {
+  background: var(--func);
+}
+
+.btn.op {
+  background: var(--op);
+}
+
+.btn.equal {
+  background: var(--accent);
+}
+
+/* hover/active */
+.btn.num:hover {
+  background: var(--num-hover);
+}
+.btn.num:active {
+  background: var(--num-active);
+  transform: translateY(1px);
+}
+
+.btn.func:hover {
+  background: var(--func-hover);
+}
+.btn.func:active {
+  background: var(--func-active);
+  transform: translateY(1px);
+}
+
+.btn.op:hover {
+  background: var(--op-hover);
+}
+.btn.op:active {
+  background: var(--op-active);
+  transform: translateY(1px);
+}
+
+.btn.equal:hover {
+  background: var(--accent-hover);
+}
+.btn.equal:active {
+  background: var(--accent-active);
+  transform: translateY(1px);
+}

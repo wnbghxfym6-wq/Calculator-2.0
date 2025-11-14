@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculator App</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#171a21">
+
+</head>
+<body>
+  <div id="app-root">
+    <div class="calculator">
+      <div class="display">
+        <div id="expression" class="expression">0</div>
+        <div id="result" class="result"></div>
+      </div>
+
+      <div class="keys">
+        <!-- row 1 -->
+        <button class="btn func" onclick="percent()">%</button>
+        <button class="btn func" onclick="clearEntry()">CE</button>
+        <button class="btn func" onclick="clearAll()">C</button>
+        <button class="btn func" onclick="backspace()">⌫</button>
+
+        <!-- row 2 -->
+        <button class="btn func" onclick="applyFunc('inv')">1/x</button>
+        <button class="btn func" onclick="applyFunc('square')">x²</button>
+        <button class="btn func" onclick="applyFunc('sqrt')">√x</button>
+        <button class="btn op"   onclick="appendChar('/')">÷</button>
+
+        <!-- row 3 -->
+        <button class="btn num" onclick="appendChar('7')">7</button>
+        <button class="btn num" onclick="appendChar('8')">8</button>
+        <button class="btn num" onclick="appendChar('9')">9</button>
+        <button class="btn op"  onclick="appendChar('*')">×</button>
+
+        <!-- row 4 -->
+        <button class="btn num" onclick="appendChar('4')">4</button>
+        <button class="btn num" onclick="appendChar('5')">5</button>
+        <button class="btn num" onclick="appendChar('6')">6</button>
+        <button class="btn op"  onclick="appendChar('-')">−</button>
+
+        <!-- row 5 -->
+        <button class="btn num" onclick="appendChar('1')">1</button>
+        <button class="btn num" onclick="appendChar('2')">2</button>
+        <button class="btn num" onclick="appendChar('3')">3</button>
+        <button class="btn op"  onclick="appendChar('+')">+</button>
+
+        <!-- row 6 -->
+        <button class="btn num zero" onclick="appendChar('0')">0</button>
+        <button class="btn num" onclick="appendChar('.')">.</button>
+        <button class="btn equal" onclick="calculate()">=</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
