@@ -17,11 +17,12 @@ const logoutBtn = document.getElementById("logout-btn");
 const exportBtn = document.getElementById("export-csv-btn");
 const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
 
-// CSV preview modal elements
-const csvModal = document.getElementById("csv-modal");
-const csvPreviewTable = document.getElementById("csv-preview-table");
-const modalCancel = document.getElementById("modal-cancel");
-const modalDownload = document.getElementById("modal-download");
+// CSV preview modal elements (will be created if missing)
+let csvModal = document.getElementById("csv-modal");
+let csvPreviewTable = document.getElementById("csv-preview-table");
+let modalCancel = document.getElementById("modal-cancel");
+let modalDownload = document.getElementById("modal-download");
+let csvModalWired = false;
 
 // ================== SESSION INFO & IP ==================
 
@@ -93,17 +94,6 @@ if (logoutBtn) {
 }
 if (exportBtn) {
   exportBtn.addEventListener("click", openCSVPreview);
-}
-if (modalCancel) {
-  modalCancel.addEventListener("click", () => {
-    if (csvModal) csvModal.classList.add("hidden");
-  });
-}
-if (modalDownload) {
-  modalDownload.addEventListener("click", () => {
-    if (csvModal) csvModal.classList.add("hidden");
-    downloadCSV();
-  });
 }
 
 function initAuth() {
@@ -444,15 +434,60 @@ function handleKey(e) {
 
 window.addEventListener("keydown", handleKey);
 
-// ================== CSV PREVIEW + EXPORT ==================
+// ================== CSV MODAL CREATION & EXPORT ==================
+
+function ensureCsvModal() {
+  if (csvModalWired) return;
+
+  // if it doesn't exist in HTML, create it
+  if (!csvModal) {
+    const wrapper = document.createElement("div");
+    wrapper.id = "csv-modal";
+    wrapper.className = "modal hidden";
+    wrapper.innerHTML = `
+      <div class="modal-content">
+        <h2>CSV Preview</h2>
+        <div id="csv-preview-table" class="modal-table"></div>
+        <div class="modal-buttons">
+          <button id="modal-cancel" class="btn secondary">Cancel</button>
+          <button id="modal-download" class="btn primary">Download CSV</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(wrapper);
+  }
+
+  // reselect elements
+  csvModal = document.getElementById("csv-modal");
+  csvPreviewTable = document.getElementById("csv-preview-table");
+  modalCancel = document.getElementById("modal-cancel");
+  modalDownload = document.getElementById("modal-download");
+
+  if (modalCancel) {
+    modalCancel.addEventListener("click", () => {
+      csvModal.classList.add("hidden");
+    });
+  }
+
+  if (modalDownload) {
+    modalDownload.addEventListener("click", () => {
+      csvModal.classList.add("hidden");
+      downloadCSV();
+    });
+  }
+
+  csvModalWired = true;
+}
 
 function openCSVPreview() {
   if (!calcLog.length) {
     alert("No calculations to export.");
     return;
   }
+
+  ensureCsvModal();
   if (!csvModal || !csvPreviewTable) {
-    // fallback: just export directly
+    // last resort: just export
     downloadCSV();
     return;
   }
