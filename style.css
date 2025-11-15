@@ -86,6 +86,7 @@ body {
   background: #0f1115;
   color: var(--text, #f4f7fa);
   outline: none;
+  font-size: 16px;
 }
 
 .field input:focus {

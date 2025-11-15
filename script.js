@@ -116,6 +116,10 @@ function showLogin() {
 function showCalculator() {
   if (loginScreen) loginScreen.classList.add("hidden");
   if (calculatorWrapper) calculatorWrapper.classList.remove("hidden");
+  if (document.activeElement && document.activeElement.blur) {document.activeElement.blur();
+
+  }
+  window.scrollTo(0, 0);
 }
 // ================== END SIMPLE LOCAL AUTH ==================
 
