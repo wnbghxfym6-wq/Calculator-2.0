@@ -127,7 +127,9 @@ body {
 .btn.logout {
   margin-top: 12px;
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 1;
+  background: #444;
+  color: white;
 }
 
 /* global box sizing */
@@ -419,8 +421,21 @@ body {
   width: 100%;
   border-collapse: collapse;
 }
+.modal-table thead th {
+  position: sticky;
+  top: 0;
+  background: #1e2330;      /* same as modal background */
+  z-index: 5;
+  border-bottom: 2px solid #444;
+}
 
-.modal-table th,
+.modal-table th {
+  padding: 8px 6px;
+  font-weight: 600;
+  background: #222a35;
+}
+
+
 .modal-table td {
   padding: 6px;
   border-bottom: 1px solid #333;
