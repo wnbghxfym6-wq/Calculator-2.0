@@ -186,41 +186,53 @@ body {
   background: var(--accent-active);
   transform: translateY(1px);
 }
-
-/* ==== MOBILE TWEAKS ==== */
+/* ==== FORCE BROWSER TO MATCH APP MODE ==== */
 @media (max-width: 600px) {
-  /* allow the page to scroll a bit if needed on phones */
   html,
   body {
-    overflow: auto;
+    height: auto !important;
+    min-height: 100svh !important;   /* same in Safari + app mode */
+    overflow: auto !important;       /* allow natural height */
+  }
+
+  #app-root {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
   }
 
   .calculator {
-    padding: 8px;
-    gap: 6px;
+    width: 100%;
+    max-width: 420px;
+    height: auto !important;         /* stop forcing shrink */
+    padding: 12px;
+    gap: 8px;
   }
 
   .display {
-    padding: 10px 12px;
-    min-height: 110px;          /* bigger display on phones */
-    max-height: 170px;
-    border-radius: 14px;
+    padding: 14px 16px;
+    min-height: 130px;
+    max-height: none;
+    border-radius: 16px;
   }
 
   .expression {
-    font-size: clamp(0.85rem, 3vw, 1rem);
+    font-size: clamp(1rem, 3vw, 1.3rem);
   }
 
   .result {
-    font-size: clamp(2.1rem, 7vw, 3rem);  /* much larger main number */
+    font-size: clamp(2.5rem, 8vw, 3.4rem);   /* big like app mode */
   }
 
   .keys {
-    gap: 4px;
+    gap: 8px;
   }
 
   .btn {
-    font-size: clamp(1.15rem, 4vw, 1.6rem);  /* bigger button labels */
-    border-radius: 14px;
+    font-size: clamp(1.4rem, 5vw, 2rem);     /* match app mode text */
+    border-radius: 16px;
+    padding-block: 14px;
   }
 }
