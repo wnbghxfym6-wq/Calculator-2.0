@@ -357,6 +357,21 @@ body {
 .screen-animate-in {
   animation: screenFadeUp 220ms ease-out;
 }
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.btn.secondary {
+  background: #2a3243;
+  color: var(--text, #f4f7fa);
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
 
 
 .hidden {

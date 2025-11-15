@@ -7,6 +7,7 @@ const STORAGE_LOGGED_IN_KEY = "calculatorLoggedIn";
 // DOM elements
 const loginScreen = document.getElementById("login-screen");
 const calculatorWrapper = document.getElementById("calculator-wrapper");
+const STORAGE_LOG_KEY = "calculatorCalcLog";   // <-- add this
 
 const loginUsername = document.getElementById("login-username");
 const loginPassword = document.getElementById("login-password");
@@ -14,6 +15,7 @@ const loginError = document.getElementById("login-error");
 const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
+const exportBtn = document.getElementById("export-csv-btn");
 
 
 // "register" on first run, "login" afterwards
@@ -50,6 +52,10 @@ if (logoutBtn) {
     // end the current session but keep the account
     localStorage.removeItem(STORAGE_LOGGED_IN_KEY);
     showLogin();
+    if (exportBtn) {
+  exportBtn.addEventListener("click", downloadCSV);
+}
+
   });
 };
 
@@ -157,6 +163,22 @@ function showCalculator() {
 let expression = "";
 let justEvaluated = false;
 let history = [];
+let calcLog = [];
+
+// load existing log from localStorage (if any)
+(function initCalcLog() {
+  try {
+    const raw = localStorage.getItem(STORAGE_LOG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        calcLog = parsed;
+      }
+    }
+  } catch (e) {
+    calcLog = [];
+  }
+})();
 
 function getEls() {
   return {
@@ -260,27 +282,67 @@ function applyFunc(type) {
     getEls().resultEl.textContent = "Error";
   }
 }
+function addToCalcLog(expr, result) {
+  const entry = {
+    time: new Date().toISOString(),
+    expression: expr,
+    result: result
+  };
 
-function calculate() {
-  if (!expression) return;
+  calcLog.push(entry);
 
   try {
-    const { resultEl } = getEls();
-    let value = Function('"use strict";return (' + expression + ')')();
-
-    // ---- TRUNCATE TO 4 DECIMALS ----
-    value = Math.trunc(value * 10000) / 10000;
-
-    // ---- REMOVE TRAILING ZEROS ----
-    const formatted = value.toString().replace(/\.?0+$/, "");
-
-    resultEl.textContent = formatted;
-    justEvaluated = true;
+    localStorage.setItem(STORAGE_LOG_KEY, JSON.stringify(calcLog));
   } catch (e) {
-    getEls().resultEl.textContent = "Error";
-    justEvaluated = false;
+    // ignore storage errors
   }
 }
+function addToCalcLog(expr, result) {
+  const entry = {
+    time: new Date().toISOString(),
+    expression: expr,
+    result: result
+  };
+
+  calcLog.push(entry);
+
+  try {
+    localStorage.setItem(STORAGE_LOG_KEY, JSON.stringify(calcLog));
+  } catch (e) {
+    // ignore storage errors
+  }
+}
+function downloadCSV() {
+  if (!calcLog.length) {
+    alert("No calculations to export yet.");
+    return;
+  }
+
+  const header = "Timestamp,Expression,Result\n";
+
+  const rows = calcLog.map((entry) => {
+    const time = entry.time || "";
+    const expr = (entry.expression || "").replace(/"/g, '""');
+    const result = entry.result != null ? String(entry.result).replace(/"/g, '""') : "";
+
+    return `"${time}","${expr}","${result}"`;
+  });
+
+  const csvContent = header + rows.join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "calculator-history.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
 
 // --- KEYBOARD SUPPORT ---
 

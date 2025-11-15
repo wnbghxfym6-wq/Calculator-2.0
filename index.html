@@ -32,12 +32,16 @@
     </div>
 
     <!-- CALCULATOR APP (HIDDEN UNTIL LOGIN) -->
-    <div id="calculator-wrapper" class="hidden">
-      <button id="logout-btn" class="btn logout">Log out</button>
+   <div id="calculator-wrapper" class="hidden">
+  <div class="toolbar">
+    <button id="logout-btn" class="btn logout">Log out</button>
+    <button id="export-csv-btn" class="btn secondary">Export history (CSV)</button>
+  </div>
 
+  <div id="app-root">
+    <div class="calculator">
+      ...
 
-      <div id="app-root">
-        <div class="calculator">
           <div class="display">
             <div id="expression" class="expression">0</div>
             <div id="result" class="result"></div>
