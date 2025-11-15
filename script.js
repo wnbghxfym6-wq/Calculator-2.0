@@ -1,35 +1,33 @@
-// ================== SIMPLE LOCAL AUTH ==================
+// ================== SIMPLE LOCAL AUTH & ELEMENTS ==================
+
 // LocalStorage keys
 const STORAGE_USER_KEY = "calculatorUsername";
 const STORAGE_PASS_KEY = "calculatorPassword";
 const STORAGE_LOGGED_IN_KEY = "calculatorLoggedIn";
+const STORAGE_LOG_KEY = "calculatorCalcLog";
 
 // DOM elements
 const loginScreen = document.getElementById("login-screen");
 const calculatorWrapper = document.getElementById("calculator-wrapper");
-const STORAGE_LOG_KEY = "calculatorCalcLog";   // <-- add this
 
 const loginUsername = document.getElementById("login-username");
 const loginPassword = document.getElementById("login-password");
 const loginError = document.getElementById("login-error");
 const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
-const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
 const exportBtn = document.getElementById("export-csv-btn");
-
+const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
 
 // "register" on first run, "login" afterwards
 let authMode = "login";
 
+// small helper: animate a screen when it becomes visible
 function animateIn(el) {
   if (!el) return;
-  // reset animation if it was just used
   el.classList.remove("screen-animate-in");
-  // force reflow so the animation restarts
-  void el.offsetWidth;
+  void el.offsetWidth; // force reflow so animation restarts
   el.classList.add("screen-animate-in");
 }
-
 
 // Initialize auth state on load
 initAuth();
@@ -49,15 +47,14 @@ if (loginPassword) {
 
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
-    // end the current session but keep the account
     localStorage.removeItem(STORAGE_LOGGED_IN_KEY);
     showLogin();
-    if (exportBtn) {
-  exportBtn.addEventListener("click", downloadCSV);
+  });
 }
 
-  });
-};
+if (exportBtn) {
+  exportBtn.addEventListener("click", downloadCSV);
+}
 
 function initAuth() {
   const storedUser = localStorage.getItem(STORAGE_USER_KEY);
@@ -89,7 +86,6 @@ function handleAuth() {
   const user = (loginUsername.value || "").trim();
   const pass = loginPassword.value || "";
 
-  // simple input validation
   if (!user || !pass) {
     loginError.textContent = "Username and password are required.";
     return;
@@ -128,19 +124,17 @@ function handleAuth() {
 function showLogin() {
   if (loginScreen) {
     loginScreen.classList.remove("hidden");
-    animateIn(loginScreen);          // ✨ animate login appearing
+    animateIn(loginScreen);
   }
   if (calculatorWrapper) {
     calculatorWrapper.classList.add("hidden");
   }
+
   if (document.activeElement && document.activeElement.blur) {
     document.activeElement.blur();
   }
   window.scrollTo(0, 0);
 }
-
-
-
 
 function showCalculator() {
   if (loginScreen) {
@@ -148,7 +142,7 @@ function showCalculator() {
   }
   if (calculatorWrapper) {
     calculatorWrapper.classList.remove("hidden");
-    animateIn(calculatorWrapper);    // ✨ animate calculator appearing
+    animateIn(calculatorWrapper);
   }
 
   if (document.activeElement && document.activeElement.blur) {
@@ -156,16 +150,15 @@ function showCalculator() {
   }
   window.scrollTo(0, 0);
 }
-// ================== END SIMPLE LOCAL AUTH ==================
 
-// --- CALCULATOR LOGIC ---
+// ================== CALCULATOR STATE & LOGGING ==================
 
 let expression = "";
 let justEvaluated = false;
 let history = [];
 let calcLog = [];
 
-// load existing log from localStorage (if any)
+// load existing calc log from localStorage (if any)
 (function initCalcLog() {
   try {
     const raw = localStorage.getItem(STORAGE_LOG_KEY);
@@ -212,7 +205,6 @@ function clearResult() {
 
 function appendChar(ch) {
   if (justEvaluated && /[0-9.]/.test(ch)) {
-    // start new expression after evaluation if typing a number
     expression = "";
   }
   justEvaluated = false;
@@ -230,7 +222,6 @@ function clearAll() {
 }
 
 function clearEntry() {
-  // simple version = same as clearAll
   clearAll();
 }
 
@@ -282,11 +273,13 @@ function applyFunc(type) {
     getEls().resultEl.textContent = "Error";
   }
 }
+
+// add one calculation to the log and persist
 function addToCalcLog(expr, result) {
   const entry = {
     time: new Date().toISOString(),
     expression: expr,
-    result: result
+    result: result,
   };
 
   calcLog.push(entry);
@@ -297,57 +290,37 @@ function addToCalcLog(expr, result) {
     // ignore storage errors
   }
 }
-function addToCalcLog(expr, result) {
-  const entry = {
-    time: new Date().toISOString(),
-    expression: expr,
-    result: result
-  };
 
-  calcLog.push(entry);
+function calculate() {
+  if (!expression) return;
 
   try {
-    localStorage.setItem(STORAGE_LOG_KEY, JSON.stringify(calcLog));
+    const { resultEl } = getEls();
+    const originalExpression = expression;
+
+    let value = Function('"use strict";return (' + expression + ')')();
+
+    // TRUNCATE TO 4 DECIMALS
+    value = Math.trunc(value * 10000) / 10000;
+
+    // REMOVE TRAILING ZEROS
+    const formatted = value.toString().replace(/\.?0+$/, "");
+
+    resultEl.textContent = formatted;
+    justEvaluated = true;
+
+    // log this calc
+    addToCalcLog(originalExpression, formatted);
   } catch (e) {
-    // ignore storage errors
+    getEls().resultEl.textContent = "Error";
+    justEvaluated = false;
   }
 }
-function downloadCSV() {
-  if (!calcLog.length) {
-    alert("No calculations to export yet.");
-    return;
-  }
 
-  const header = "Timestamp,Expression,Result\n";
-
-  const rows = calcLog.map((entry) => {
-    const time = entry.time || "";
-    const expr = (entry.expression || "").replace(/"/g, '""');
-    const result = entry.result != null ? String(entry.result).replace(/"/g, '""') : "";
-
-    return `"${time}","${expr}","${result}"`;
-  });
-
-  const csvContent = header + rows.join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "calculator-history.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  URL.revokeObjectURL(url);
-}
-
-
-// --- KEYBOARD SUPPORT ---
+// ================== KEYBOARD SUPPORT ==================
 
 function handleKey(e) {
-  // 🔒 Don't hijack keyboard if user is typing in an input (like login fields)
+  // don't hijack typing in login inputs
   const active = document.activeElement;
   if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
     return;
@@ -392,21 +365,13 @@ function handleKey(e) {
     return;
   }
 
-  // Escape → clear all
-  if (key === "Escape") {
+  // Escape / Delete → clear all
+  if (key === "Escape" || key === "Delete") {
     clearAll();
     e.preventDefault();
     return;
   }
 
-  // Delete → clear all
-  if (key === "Delete") {
-    clearAll();
-    e.preventDefault();
-    return;
-  }
-
-  // % key
   if (key === "%") {
     percent();
     e.preventDefault();
@@ -416,12 +381,46 @@ function handleKey(e) {
 
 window.addEventListener("keydown", handleKey);
 
-// --- SCALING LOGIC ---
+// ================== CSV EXPORT ==================
+
+function downloadCSV() {
+  if (!calcLog.length) {
+    alert("No calculations to export yet.");
+    return;
+  }
+
+  const header = "Timestamp,Expression,Result\n";
+
+  const rows = calcLog.map((entry) => {
+    const time = entry.time || "";
+    const expr = (entry.expression || "").replace(/"/g, '""');
+    const result =
+      entry.result != null ? String(entry.result).replace(/"/g, '""') : "";
+
+    return `"${time}","${expr}","${result}"`;
+  });
+
+  const csvContent = header + rows.join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "calculator-history.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+// ================== SCALING LOGIC ==================
 
 (function () {
   const BASE_WIDTH = 420;
   const BASE_HEIGHT = 620;
-  const MIN_SCALE = 0.6; // 👈 added so it doesn't error
+  const MIN_SCALE = 0.6;
 
   function applyScale() {
     const root = document.getElementById("app-root");
