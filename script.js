@@ -5,6 +5,8 @@ const STORAGE_USER_KEY = "calculatorUsername";
 const STORAGE_PASS_KEY = "calculatorPassword";
 const STORAGE_LOGGED_IN_KEY = "calculatorLoggedIn";
 const STORAGE_LOG_KEY = "calculatorCalcLog";
+const STORAGE_SESSION_INFO_KEY = "calculatorLastSessionInfo"; // NEW
+
 
 // DOM elements
 const loginScreen = document.getElementById("login-screen");
@@ -60,6 +62,26 @@ function initAuth() {
   const storedUser = localStorage.getItem(STORAGE_USER_KEY);
   const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
 
+    // load last session info (for auto-login sessions)
+  try {
+    const savedSession = localStorage.getItem(STORAGE_SESSION_INFO_KEY);
+    if (savedSession) {
+      const parsed = JSON.parse(savedSession);
+      if (parsed && typeof parsed === "object") {
+        currentSessionInfo = {
+          username: parsed.username || storedUser || null,
+          loginTime: parsed.loginTime || null,
+          ip: parsed.ip || null,
+        };
+      }
+    } else if (storedUser) {
+      currentSessionInfo.username = storedUser;
+    }
+  } catch (e) {
+    // ignore parse errors, fall back to storedUser only
+    if (storedUser) currentSessionInfo.username = storedUser;
+  }
+
   if (storedUser && storedPass) {
     // account already exists → normal login mode
     authMode = "login";
@@ -97,6 +119,18 @@ function handleAuth() {
     localStorage.setItem(STORAGE_PASS_KEY, pass);
     localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
 
+    // record this login session
+    const loginTime = new Date().toISOString();
+    currentSessionInfo = {
+      username: user,
+      loginTime,
+      ip: cachedIP || null,
+    };
+    localStorage.setItem(
+      STORAGE_SESSION_INFO_KEY,
+      JSON.stringify(currentSessionInfo)
+    );
+
     loginError.textContent = "";
     loginPassword.value = "";
     showCalculator();
@@ -111,10 +145,23 @@ function handleAuth() {
     const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
 
     if (user === storedUser && pass === storedPass) {
+      // record this login session
+      const loginTime = new Date().toISOString();
+      currentSessionInfo = {
+        username: user,
+        loginTime,
+        ip: cachedIP || null,
+      };
+      localStorage.setItem(
+        STORAGE_SESSION_INFO_KEY,
+        JSON.stringify(currentSessionInfo)
+      );
+
       loginError.textContent = "";
       loginPassword.value = "";
       localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
       showCalculator();
+
     } else {
       loginError.textContent = "Invalid username or password.";
     }
@@ -157,6 +204,29 @@ let expression = "";
 let justEvaluated = false;
 let history = [];
 let calcLog = [];
+
+// current login session info
+let currentSessionInfo = {
+  username: null,
+  loginTime: null,
+  ip: null,
+};
+// best-effort public IP detection (requires internet access)
+let cachedIP = null;
+(function initIP() {
+  try {
+    fetch("https://api.ipify.org?format=json")
+      .then((r) => r.json())
+      .then((data) => {
+        cachedIP = data && data.ip ? data.ip : null;
+      })
+      .catch(() => {
+        cachedIP = null;
+      });
+  } catch (e) {
+    cachedIP = null;
+  }
+})();
 
 // load existing calc log from localStorage (if any)
 (function initCalcLog() {
@@ -277,9 +347,12 @@ function applyFunc(type) {
 // add one calculation to the log and persist
 function addToCalcLog(expr, result) {
   const entry = {
-    time: new Date().toISOString(),
+    time: new Date().toISOString(),              // when calculation happened
     expression: expr,
     result: result,
+    loginTime: currentSessionInfo.loginTime,     // when user logged in
+    username: currentSessionInfo.username,       // "user id"
+    ip: currentSessionInfo.ip,                   // best-effort IP
   };
 
   calcLog.push(entry);
@@ -290,6 +363,7 @@ function addToCalcLog(expr, result) {
     // ignore storage errors
   }
 }
+
 
 function calculate() {
   if (!expression) return;
@@ -389,15 +463,20 @@ function downloadCSV() {
     return;
   }
 
-  const header = "Timestamp,Expression,Result\n";
+  const header =
+    "CalcTimestamp,UserId,UserIP,LoginTimestamp,Expression,Result\n";
 
   const rows = calcLog.map((entry) => {
-    const time = entry.time || "";
+    const calcTime = entry.time || "";
+    const loginTime = entry.loginTime || "";
+    const userId = entry.username || "";
+    const ip = entry.ip || "";
+
     const expr = (entry.expression || "").replace(/"/g, '""');
     const result =
       entry.result != null ? String(entry.result).replace(/"/g, '""') : "";
 
-    return `"${time}","${expr}","${result}"`;
+    return `"${calcTime}","${userId}","${ip}","${loginTime}","${expr}","${result}"`;
   });
 
   const csvContent = header + rows.join("\n");
@@ -414,6 +493,7 @@ function downloadCSV() {
 
   URL.revokeObjectURL(url);
 }
+
 
 // ================== SCALING LOGIC ==================
 
