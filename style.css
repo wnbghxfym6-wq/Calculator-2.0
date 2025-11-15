@@ -24,9 +24,6 @@
   --accent-hover: #3e85ff;
   --accent-active: #2f6ed9;
 }
-.hidden {
-  display: none;
-}
 body {
   margin: 0;
   background: var(--bg, #0f1115);
@@ -341,4 +338,7 @@ body {
     border-radius: 16px;
     padding-block: 14px;
   }
+}
+.hidden {
+  display: none;
 }
