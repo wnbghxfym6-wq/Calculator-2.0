@@ -40,7 +40,7 @@ if (logoutBtn) {
     localStorage.removeItem(STORAGE_LOGGED_IN_KEY);
     showLogin();
   });
-}
+};
 
 function initAuth() {
   const storedUser = localStorage.getItem(STORAGE_USER_KEY);
@@ -125,7 +125,6 @@ let expression = "";
 let justEvaluated = false;
 let history = [];
 
-
 function getEls() {
   return {
     exprEl: document.getElementById("expression"),
@@ -137,15 +136,14 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
 
-
 function updateHistory() {
   const historyPanel = document.getElementById("history-panel");
+  if (!historyPanel) return;
 
   historyPanel.innerHTML = history
-    .map(item => `<div>${item}</div>`)
+    .map((item) => `<div>${item}</div>`)
     .join("");
 }
-
 
 function updateExpression() {
   const { exprEl } = getEls();
@@ -245,17 +243,21 @@ function calculate() {
 
     resultEl.textContent = formatted;
     justEvaluated = true;
-
   } catch (e) {
     getEls().resultEl.textContent = "Error";
     justEvaluated = false;
   }
 }
 
-
 // --- KEYBOARD SUPPORT ---
 
 function handleKey(e) {
+  // 🔒 Don't hijack keyboard if user is typing in an input (like login fields)
+  const active = document.activeElement;
+  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+    return;
+  }
+
   if (e.ctrlKey || e.metaKey || e.altKey) return;
 
   const key = e.key;
@@ -323,8 +325,8 @@ window.addEventListener("keydown", handleKey);
 
 (function () {
   const BASE_WIDTH = 420;
-  const BASE_HEIGHT = 620;   // ↓ matches main.js & CSS
-
+  const BASE_HEIGHT = 620;
+  const MIN_SCALE = 0.6; // 👈 added so it doesn't error
 
   function applyScale() {
     const root = document.getElementById("app-root");
@@ -346,7 +348,4 @@ window.addEventListener("keydown", handleKey);
     updateExpression();
     applyScale();
   });
-
-// --- uniform scaling of the calculator ---
 })();
-
