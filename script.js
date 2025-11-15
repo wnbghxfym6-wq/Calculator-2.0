@@ -120,7 +120,16 @@ function handleAuth() {
     localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
 
     // record this login session
-    const loginTime = new Date().toISOString();
+const loginTime = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false
+}).format(new Date());
     currentSessionInfo = {
       username: user,
       loginTime,
@@ -347,7 +356,16 @@ function applyFunc(type) {
 // add one calculation to the log and persist
 function addToCalcLog(expr, result) {
   const entry = {
-    time: new Date().toISOString(),              // when calculation happened
+time: new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false
+}).format(new Date()),
     expression: expr,
     result: result,
     loginTime: currentSessionInfo.loginTime,     // when user logged in
