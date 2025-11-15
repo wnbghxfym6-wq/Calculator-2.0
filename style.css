@@ -149,6 +149,7 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   overflow: hidden;
+  touch-action: none;
 }
 
 /* root fills window */
