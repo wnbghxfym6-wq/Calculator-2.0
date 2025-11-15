@@ -191,8 +191,8 @@ body {
   html,
   body {
     height: auto !important;
-    min-height: 100svh !important;   /* same in Safari + app mode */
-    overflow: auto !important;       /* allow natural height */
+    min-height: 100svh !important;   /* stable viewport on phones */
+    overflow: auto !important;
   }
 
   #app-root {
@@ -206,7 +206,7 @@ body {
   .calculator {
     width: 100%;
     max-width: 420px;
-    height: auto !important;         /* stop forcing shrink */
+    height: auto !important;         /* prevents shrinking in browser */
     padding: 12px;
     gap: 8px;
   }
@@ -223,7 +223,7 @@ body {
   }
 
   .result {
-    font-size: clamp(2.5rem, 8vw, 3.4rem);   /* big like app mode */
+    font-size: clamp(2.5rem, 8vw, 3.4rem);   /* bigger, app-style */
   }
 
   .keys {
@@ -231,8 +231,9 @@ body {
   }
 
   .btn {
-    font-size: clamp(1.4rem, 5vw, 2rem);     /* match app mode text */
+    font-size: clamp(1.4rem, 5vw, 2rem);     /* match app mode buttons */
     border-radius: 16px;
     padding-block: 14px;
   }
 }
+
