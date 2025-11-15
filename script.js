@@ -1,14 +1,11 @@
-// ================== SIMPLE LOCAL AUTH & ELEMENTS ==================
-
-// LocalStorage keys
+// ================== STORAGE KEYS ==================
 const STORAGE_USER_KEY = "calculatorUsername";
 const STORAGE_PASS_KEY = "calculatorPassword";
 const STORAGE_LOGGED_IN_KEY = "calculatorLoggedIn";
 const STORAGE_LOG_KEY = "calculatorCalcLog";
-const STORAGE_SESSION_INFO_KEY = "calculatorLastSessionInfo"; // NEW
+const STORAGE_SESSION_INFO_KEY = "calculatorLastSessionInfo";
 
-
-// DOM elements
+// ================== DOM ELEMENTS ==================
 const loginScreen = document.getElementById("login-screen");
 const calculatorWrapper = document.getElementById("calculator-wrapper");
 
@@ -19,66 +16,101 @@ const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const exportBtn = document.getElementById("export-csv-btn");
 const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
+
+// CSV preview modal elements
 const csvModal = document.getElementById("csv-modal");
 const csvPreviewTable = document.getElementById("csv-preview-table");
 const modalCancel = document.getElementById("modal-cancel");
 const modalDownload = document.getElementById("modal-download");
 
-// === CSV Modal Buttons ===
-modalCancel.addEventListener("click", () => {
-  csvModal.classList.add("hidden");
-});
+// ================== SESSION INFO & IP ==================
 
-modalDownload.addEventListener("click", () => {
-  csvModal.classList.add("hidden");
-  downloadCSV();  // uses your existing CSV export function
-});
+let currentSessionInfo = {
+  username: null,
+  loginTime: null,
+  ip: null,
+};
 
+let cachedIP = null;
+(function initIP() {
+  try {
+    fetch("https://api.ipify.org?format=json")
+      .then((r) => r.json())
+      .then((data) => {
+        cachedIP = data && data.ip ? data.ip : null;
+      })
+      .catch(() => {
+        cachedIP = null;
+      });
+  } catch (e) {
+    cachedIP = null;
+  }
+})();
 
-// "register" on first run, "login" afterwards
-let authMode = "login";
+// helper: MST timestamp (America/Denver)
+function getLocalTimestamp() {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date());
+}
 
-// small helper: animate a screen when it becomes visible
+// ================== ANIMATION ==================
+
 function animateIn(el) {
   if (!el) return;
   el.classList.remove("screen-animate-in");
-  void el.offsetWidth; // force reflow so animation restarts
+  void el.offsetWidth; // restart animation
   el.classList.add("screen-animate-in");
 }
 
-// Initialize auth state on load
+// ================== AUTH FLOW ==================
+
+let authMode = "login"; // "register" on first run
+
 initAuth();
 
-// Wire up events
+// button wiring (guarded so they can't crash)
 if (loginBtn) {
   loginBtn.addEventListener("click", handleAuth);
 }
-
 if (loginPassword) {
   loginPassword.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      handleAuth();
-    }
+    if (e.key === "Enter") handleAuth();
   });
 }
-
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem(STORAGE_LOGGED_IN_KEY);
     showLogin();
   });
 }
-
 if (exportBtn) {
   exportBtn.addEventListener("click", openCSVPreview);
 }
-
+if (modalCancel) {
+  modalCancel.addEventListener("click", () => {
+    if (csvModal) csvModal.classList.add("hidden");
+  });
+}
+if (modalDownload) {
+  modalDownload.addEventListener("click", () => {
+    if (csvModal) csvModal.classList.add("hidden");
+    downloadCSV();
+  });
+}
 
 function initAuth() {
   const storedUser = localStorage.getItem(STORAGE_USER_KEY);
   const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
 
-    // load last session info (for auto-login sessions)
+  // load last session info if present
   try {
     const savedSession = localStorage.getItem(STORAGE_SESSION_INFO_KEY);
     if (savedSession) {
@@ -94,17 +126,14 @@ function initAuth() {
       currentSessionInfo.username = storedUser;
     }
   } catch (e) {
-    // ignore parse errors, fall back to storedUser only
     if (storedUser) currentSessionInfo.username = storedUser;
   }
 
   if (storedUser && storedPass) {
-    // account already exists → normal login mode
     authMode = "login";
     if (loginTitle) loginTitle.textContent = "Sign In";
     if (loginBtn) loginBtn.textContent = "Sign in";
 
-    // if we were logged in previously, go straight to calculator
     if (localStorage.getItem(STORAGE_LOGGED_IN_KEY) === "true") {
       showCalculator();
       return;
@@ -112,7 +141,6 @@ function initAuth() {
 
     showLogin();
   } else {
-    // first time → create account mode
     authMode = "register";
     if (loginTitle) loginTitle.textContent = "Create Account";
     if (loginBtn) loginBtn.textContent = "Create account";
@@ -130,22 +158,11 @@ function handleAuth() {
   }
 
   if (authMode === "register") {
-    // first-time setup: save username + password locally
     localStorage.setItem(STORAGE_USER_KEY, user);
     localStorage.setItem(STORAGE_PASS_KEY, pass);
     localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
 
-    // record this login session
-const loginTime = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/Denver",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false
-}).format(new Date());
+    const loginTime = getLocalTimestamp();
     currentSessionInfo = {
       username: user,
       loginTime,
@@ -160,18 +177,15 @@ const loginTime = new Intl.DateTimeFormat("en-US", {
     loginPassword.value = "";
     showCalculator();
 
-    // switch future visits to login mode
     authMode = "login";
     if (loginTitle) loginTitle.textContent = "Sign In";
     if (loginBtn) loginBtn.textContent = "Sign in";
   } else {
-    // normal login
     const storedUser = localStorage.getItem(STORAGE_USER_KEY);
     const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
 
     if (user === storedUser && pass === storedPass) {
-      // record this login session
-      const loginTime = new Date().toISOString();
+      const loginTime = getLocalTimestamp();
       currentSessionInfo = {
         username: user,
         loginTime,
@@ -186,7 +200,6 @@ const loginTime = new Intl.DateTimeFormat("en-US", {
       loginPassword.value = "";
       localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
       showCalculator();
-
     } else {
       loginError.textContent = "Invalid username or password.";
     }
@@ -201,7 +214,6 @@ function showLogin() {
   if (calculatorWrapper) {
     calculatorWrapper.classList.add("hidden");
   }
-
   if (document.activeElement && document.activeElement.blur) {
     document.activeElement.blur();
   }
@@ -216,52 +228,26 @@ function showCalculator() {
     calculatorWrapper.classList.remove("hidden");
     animateIn(calculatorWrapper);
   }
-
   if (document.activeElement && document.activeElement.blur) {
     document.activeElement.blur();
   }
   window.scrollTo(0, 0);
 }
 
-// ================== CALCULATOR STATE & LOGGING ==================
+// ================== CALCULATOR + LOGGING ==================
 
 let expression = "";
 let justEvaluated = false;
 let history = [];
 let calcLog = [];
 
-// current login session info
-let currentSessionInfo = {
-  username: null,
-  loginTime: null,
-  ip: null,
-};
-// best-effort public IP detection (requires internet access)
-let cachedIP = null;
-(function initIP() {
-  try {
-    fetch("https://api.ipify.org?format=json")
-      .then((r) => r.json())
-      .then((data) => {
-        cachedIP = data && data.ip ? data.ip : null;
-      })
-      .catch(() => {
-        cachedIP = null;
-      });
-  } catch (e) {
-    cachedIP = null;
-  }
-})();
-
-// load existing calc log from localStorage (if any)
+// load existing calculations
 (function initCalcLog() {
   try {
     const raw = localStorage.getItem(STORAGE_LOG_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        calcLog = parsed;
-      }
+      if (Array.isArray(parsed)) calcLog = parsed;
     }
   } catch (e) {
     calcLog = [];
@@ -282,7 +268,6 @@ if ("serviceWorker" in navigator) {
 function updateHistory() {
   const historyPanel = document.getElementById("history-panel");
   if (!historyPanel) return;
-
   historyPanel.innerHTML = history
     .map((item) => `<div>${item}</div>`)
     .join("");
@@ -329,7 +314,7 @@ function backspace() {
 function percent() {
   if (!expression) return;
   try {
-    const value = Function('"use strict";return (' + expression + ')')();
+    const value = Function('"use strict";return (' + expression + ")")();
     const { resultEl } = getEls();
     const pct = value / 100;
     expression = String(pct);
@@ -343,7 +328,7 @@ function percent() {
 function applyFunc(type) {
   if (!expression) return;
   try {
-    const x = Function('"use strict";return (' + expression + ')')();
+    const x = Function('"use strict";return (' + expression + ")")();
     let value;
 
     switch (type) {
@@ -369,35 +354,23 @@ function applyFunc(type) {
   }
 }
 
-// add one calculation to the log and persist
 function addToCalcLog(expr, result) {
   const entry = {
-time: new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/Denver",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false
-}).format(new Date()),
+    time: getLocalTimestamp(), // MST calc time
     expression: expr,
     result: result,
-    loginTime: currentSessionInfo.loginTime,     // when user logged in
-    username: currentSessionInfo.username,       // "user id"
-    ip: currentSessionInfo.ip,                   // best-effort IP
+    loginTime: currentSessionInfo.loginTime,
+    username: currentSessionInfo.username,
+    ip: currentSessionInfo.ip,
   };
 
   calcLog.push(entry);
-
   try {
     localStorage.setItem(STORAGE_LOG_KEY, JSON.stringify(calcLog));
   } catch (e) {
-    // ignore storage errors
+    // ignore
   }
 }
-
 
 function calculate() {
   if (!expression) return;
@@ -406,18 +379,14 @@ function calculate() {
     const { resultEl } = getEls();
     const originalExpression = expression;
 
-    let value = Function('"use strict";return (' + expression + ')')();
+    let value = Function('"use strict";return (' + expression + ")")();
 
-    // TRUNCATE TO 4 DECIMALS
     value = Math.trunc(value * 10000) / 10000;
-
-    // REMOVE TRAILING ZEROS
     const formatted = value.toString().replace(/\.?0+$/, "");
 
     resultEl.textContent = formatted;
     justEvaluated = true;
 
-    // log this calc
     addToCalcLog(originalExpression, formatted);
   } catch (e) {
     getEls().resultEl.textContent = "Error";
@@ -428,58 +397,44 @@ function calculate() {
 // ================== KEYBOARD SUPPORT ==================
 
 function handleKey(e) {
-  // don't hijack typing in login inputs
   const active = document.activeElement;
   if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
     return;
   }
-
   if (e.ctrlKey || e.metaKey || e.altKey) return;
 
   const key = e.key;
 
-  // digits
   if (key >= "0" && key <= "9") {
     appendChar(key);
     e.preventDefault();
     return;
   }
-
-  // decimal
   if (key === "." || key === ",") {
     appendChar(".");
     e.preventDefault();
     return;
   }
-
-  // operators
   if (key === "+" || key === "-" || key === "*" || key === "/") {
     appendChar(key);
     e.preventDefault();
     return;
   }
-
-  // Enter / =  → calculate
   if (key === "Enter" || key === "=") {
     calculate();
     e.preventDefault();
     return;
   }
-
-  // Backspace → delete last char
   if (key === "Backspace") {
     backspace();
     e.preventDefault();
     return;
   }
-
-  // Escape / Delete → clear all
   if (key === "Escape" || key === "Delete") {
     clearAll();
     e.preventDefault();
     return;
   }
-
   if (key === "%") {
     percent();
     e.preventDefault();
@@ -489,7 +444,44 @@ function handleKey(e) {
 
 window.addEventListener("keydown", handleKey);
 
-// ================== CSV EXPORT ==================
+// ================== CSV PREVIEW + EXPORT ==================
+
+function openCSVPreview() {
+  if (!calcLog.length) {
+    alert("No calculations to export.");
+    return;
+  }
+  if (!csvModal || !csvPreviewTable) {
+    // fallback: just export directly
+    downloadCSV();
+    return;
+  }
+
+  let html = "<table><thead><tr>";
+  html +=
+    "<th>Calc Time</th><th>User</th><th>IP</th><th>Login</th><th>Expr</th><th>Result</th>";
+  html += "</tr></thead><tbody>";
+
+  const previewRows = calcLog.slice(-20); // last 20
+
+  previewRows.forEach((entry) => {
+    html += `
+      <tr>
+        <td>${entry.time || ""}</td>
+        <td>${entry.username || ""}</td>
+        <td>${entry.ip || ""}</td>
+        <td>${entry.loginTime || ""}</td>
+        <td>${entry.expression || ""}</td>
+        <td>${entry.result || ""}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  csvPreviewTable.innerHTML = html;
+
+  csvModal.classList.remove("hidden");
+}
 
 function downloadCSV() {
   if (!calcLog.length) {
@@ -514,8 +506,9 @@ function downloadCSV() {
   });
 
   const csvContent = header + rows.join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
@@ -528,40 +521,7 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
-function openCSVPreview() {
-  if (!calcLog.length) {
-    alert("No calculations to export.");
-    return;
-  }
-
-  // Build HTML table preview
-  let html = "<table><thead><tr>";
-  html += "<th>Calc Time</th><th>User</th><th>IP</th><th>Login</th><th>Expr</th><th>Result</th>";
-  html += "</tr></thead><tbody>";
-
-  // show last 20 rows (or all if less)
-  const previewRows = calcLog.slice(-20);
-
-  previewRows.forEach(entry => {
-    html += `
-      <tr>
-        <td>${entry.time}</td>
-        <td>${entry.username || ""}</td>
-        <td>${entry.ip || ""}</td>
-        <td>${entry.loginTime || ""}</td>
-        <td>${entry.expression || ""}</td>
-        <td>${entry.result || ""}</td>
-      </tr>
-    `;
-  });
-
-  html += "</tbody></table>";
-  csvPreviewTable.innerHTML = html;
-
-  csvModal.classList.remove("hidden");
-}
-
-// ================== SCALING LOGIC ==================
+// ================== SCALING ==================
 
 (function () {
   const BASE_WIDTH = 420;
