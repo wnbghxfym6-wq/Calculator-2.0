@@ -1,3 +1,124 @@
+// ================== SIMPLE LOCAL AUTH ==================
+// LocalStorage keys
+const STORAGE_USER_KEY = "calculatorUsername";
+const STORAGE_PASS_KEY = "calculatorPassword";
+const STORAGE_LOGGED_IN_KEY = "calculatorLoggedIn";
+
+// DOM elements
+const loginScreen = document.getElementById("login-screen");
+const calculatorWrapper = document.getElementById("calculator-wrapper");
+
+const loginUsername = document.getElementById("login-username");
+const loginPassword = document.getElementById("login-password");
+const loginError = document.getElementById("login-error");
+const loginBtn = document.getElementById("login-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
+
+// "register" on first run, "login" afterwards
+let authMode = "login";
+
+// Initialize auth state on load
+initAuth();
+
+// Wire up events
+if (loginBtn) {
+  loginBtn.addEventListener("click", handleAuth);
+}
+
+if (loginPassword) {
+  loginPassword.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleAuth();
+    }
+  });
+}
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    // end the current session but keep the account
+    localStorage.removeItem(STORAGE_LOGGED_IN_KEY);
+    showLogin();
+  });
+}
+
+function initAuth() {
+  const storedUser = localStorage.getItem(STORAGE_USER_KEY);
+  const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
+
+  if (storedUser && storedPass) {
+    // account already exists → normal login mode
+    authMode = "login";
+    if (loginTitle) loginTitle.textContent = "Sign In";
+    if (loginBtn) loginBtn.textContent = "Sign in";
+
+    // if we were logged in previously, go straight to calculator
+    if (localStorage.getItem(STORAGE_LOGGED_IN_KEY) === "true") {
+      showCalculator();
+      return;
+    }
+
+    showLogin();
+  } else {
+    // first time → create account mode
+    authMode = "register";
+    if (loginTitle) loginTitle.textContent = "Create Account";
+    if (loginBtn) loginBtn.textContent = "Create account";
+    showLogin();
+  }
+}
+
+function handleAuth() {
+  const user = (loginUsername.value || "").trim();
+  const pass = loginPassword.value || "";
+
+  // simple input validation
+  if (!user || !pass) {
+    loginError.textContent = "Username and password are required.";
+    return;
+  }
+
+  if (authMode === "register") {
+    // first-time setup: save username + password locally
+    localStorage.setItem(STORAGE_USER_KEY, user);
+    localStorage.setItem(STORAGE_PASS_KEY, pass);
+    localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
+
+    loginError.textContent = "";
+    loginPassword.value = "";
+    showCalculator();
+
+    // switch future visits to login mode
+    authMode = "login";
+    if (loginTitle) loginTitle.textContent = "Sign In";
+    if (loginBtn) loginBtn.textContent = "Sign in";
+  } else {
+    // normal login
+    const storedUser = localStorage.getItem(STORAGE_USER_KEY);
+    const storedPass = localStorage.getItem(STORAGE_PASS_KEY);
+
+    if (user === storedUser && pass === storedPass) {
+      loginError.textContent = "";
+      loginPassword.value = "";
+      localStorage.setItem(STORAGE_LOGGED_IN_KEY, "true");
+      showCalculator();
+    } else {
+      loginError.textContent = "Invalid username or password.";
+    }
+  }
+}
+
+function showLogin() {
+  if (loginScreen) loginScreen.classList.remove("hidden");
+  if (calculatorWrapper) calculatorWrapper.classList.add("hidden");
+}
+
+function showCalculator() {
+  if (loginScreen) loginScreen.classList.add("hidden");
+  if (calculatorWrapper) calculatorWrapper.classList.remove("hidden");
+}
+// ================== END SIMPLE LOCAL AUTH ==================
+
 // --- CALCULATOR LOGIC ---
 
 let expression = "";

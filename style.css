@@ -1,7 +1,6 @@
 /* ==== THEME ==== */
 :root {
-  /* make window bg and calculator bg the same
-     so there is no visible outer frame */
+
   --bg: #171a21;
   --panel: #171a21;
 
@@ -24,6 +23,91 @@
   --accent: #357ae8;
   --accent-hover: #3e85ff;
   --accent-active: #2f6ed9;
+}
+.hidden {
+  display: none;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #0f1115);
+}
+
+.login-card {
+  background: var(--panel, #171a21);
+  padding: 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  width: 320px;
+  max-width: 90vw;
+  color: var(--text, #f4f7fa);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.field span {
+  color: var(--muted, #9ca3af);
+}
+
+.field input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3243;
+  background: #0f1115;
+  color: var(--text, #f4f7fa);
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--accent, #357ae8);
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--accent, #357ae8);
+  color: white;
+  width: 100%;
+}
+
+.btn.primary:hover {
+  background: var(--accent-hover, #3e85ff);
+}
+
+.login-error {
+  min-height: 1.2em;
+  color: #f97373;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.btn.logout {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  opacity: 0.7;
 }
 
 /* global box sizing */
