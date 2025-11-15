@@ -19,6 +19,21 @@ const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const exportBtn = document.getElementById("export-csv-btn");
 const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
+const csvModal = document.getElementById("csv-modal");
+const csvPreviewTable = document.getElementById("csv-preview-table");
+const modalCancel = document.getElementById("modal-cancel");
+const modalDownload = document.getElementById("modal-download");
+
+// === CSV Modal Buttons ===
+modalCancel.addEventListener("click", () => {
+  csvModal.classList.add("hidden");
+});
+
+modalDownload.addEventListener("click", () => {
+  csvModal.classList.add("hidden");
+  downloadCSV();  // uses your existing CSV export function
+});
+
 
 // "register" on first run, "login" afterwards
 let authMode = "login";
@@ -55,8 +70,9 @@ if (logoutBtn) {
 }
 
 if (exportBtn) {
-  exportBtn.addEventListener("click", downloadCSV);
+  exportBtn.addEventListener("click", openCSVPreview);
 }
+
 
 function initAuth() {
   const storedUser = localStorage.getItem(STORAGE_USER_KEY);
@@ -512,6 +528,38 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
+function openCSVPreview() {
+  if (!calcLog.length) {
+    alert("No calculations to export.");
+    return;
+  }
+
+  // Build HTML table preview
+  let html = "<table><thead><tr>";
+  html += "<th>Calc Time</th><th>User</th><th>IP</th><th>Login</th><th>Expr</th><th>Result</th>";
+  html += "</tr></thead><tbody>";
+
+  // show last 20 rows (or all if less)
+  const previewRows = calcLog.slice(-20);
+
+  previewRows.forEach(entry => {
+    html += `
+      <tr>
+        <td>${entry.time}</td>
+        <td>${entry.username || ""}</td>
+        <td>${entry.ip || ""}</td>
+        <td>${entry.loginTime || ""}</td>
+        <td>${entry.expression || ""}</td>
+        <td>${entry.result || ""}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  csvPreviewTable.innerHTML = html;
+
+  csvModal.classList.remove("hidden");
+}
 
 // ================== SCALING LOGIC ==================
 
