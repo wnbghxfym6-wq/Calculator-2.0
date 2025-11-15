@@ -295,9 +295,9 @@ body {
 @media (max-width: 600px) and (hover: none) and (pointer: coarse) {
   html,
   body {
-    height: auto !important;
+    height: 100svh !important;
     min-height: 100svh !important;
-    overflow: auto !important;
+    overflow: hidden !important;    /* 👈 was auto */
   }
 
   #app-root {
@@ -315,6 +315,8 @@ body {
     padding: 12px;
     gap: 8px;
   }
+
+  /* rest unchanged */
 
 
   .display {
