@@ -32,9 +32,7 @@ let currentSessionInfo = {
   ip: null,
 };
 
-document.addEventListener("touchmove", function(e) {
-  e.preventDefault();
-}, { passive: false });
+
 
 let cachedIP = null;
 (function initIP() {

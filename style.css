@@ -149,7 +149,7 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   overflow: hidden;
-  touch-action: none;
+  
 }
 
 /* root fills window */
@@ -397,6 +397,7 @@ body {
   color: white;
   max-height: 80vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-table {
