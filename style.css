@@ -186,12 +186,12 @@ body {
   background: var(--accent-active);
   transform: translateY(1px);
 }
-/* ==== FORCE BROWSER TO MATCH APP MODE ==== */
-@media (max-width: 600px) {
+/* ==== FORCE BROWSER TO MATCH APP MODE (PHONES ONLY) ==== */
+@media (max-width: 600px) and (hover: none) and (pointer: coarse) {
   html,
   body {
     height: auto !important;
-    min-height: 100svh !important;   /* stable viewport on phones */
+    min-height: 100svh !important;
     overflow: auto !important;
   }
 
@@ -206,7 +206,7 @@ body {
   .calculator {
     width: 100%;
     max-width: 420px;
-    height: auto !important;         /* prevents shrinking in browser */
+    height: auto !important;
     padding: 12px;
     gap: 8px;
   }
@@ -223,7 +223,7 @@ body {
   }
 
   .result {
-    font-size: clamp(2.5rem, 8vw, 3.4rem);   /* bigger, app-style */
+    font-size: clamp(2.5rem, 8vw, 3.4rem);
   }
 
   .keys {
@@ -231,9 +231,8 @@ body {
   }
 
   .btn {
-    font-size: clamp(1.4rem, 5vw, 2rem);     /* match app mode buttons */
+    font-size: clamp(1.4rem, 5vw, 2rem);
     border-radius: 16px;
     padding-block: 14px;
   }
 }
-
