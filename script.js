@@ -15,8 +15,19 @@ const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const loginTitle = loginScreen ? loginScreen.querySelector("h1") : null;
 
+
 // "register" on first run, "login" afterwards
 let authMode = "login";
+
+function animateIn(el) {
+  if (!el) return;
+  // reset animation if it was just used
+  el.classList.remove("screen-animate-in");
+  // force reflow so the animation restarts
+  void el.offsetWidth;
+  el.classList.add("screen-animate-in");
+}
+
 
 // Initialize auth state on load
 initAuth();
@@ -109,15 +120,33 @@ function handleAuth() {
 }
 
 function showLogin() {
-  if (loginScreen) loginScreen.classList.remove("hidden");
-  if (calculatorWrapper) calculatorWrapper.classList.add("hidden");
+  if (loginScreen) {
+    loginScreen.classList.remove("hidden");
+    animateIn(loginScreen);          // ✨ animate login appearing
+  }
+  if (calculatorWrapper) {
+    calculatorWrapper.classList.add("hidden");
+  }
+  if (document.activeElement && document.activeElement.blur) {
+    document.activeElement.blur();
+  }
+  window.scrollTo(0, 0);
 }
 
-function showCalculator() {
-  if (loginScreen) loginScreen.classList.add("hidden");
-  if (calculatorWrapper) calculatorWrapper.classList.remove("hidden");
-  if (document.activeElement && document.activeElement.blur) {document.activeElement.blur();
 
+
+
+function showCalculator() {
+  if (loginScreen) {
+    loginScreen.classList.add("hidden");
+  }
+  if (calculatorWrapper) {
+    calculatorWrapper.classList.remove("hidden");
+    animateIn(calculatorWrapper);    // ✨ animate calculator appearing
+  }
+
+  if (document.activeElement && document.activeElement.blur) {
+    document.activeElement.blur();
   }
   window.scrollTo(0, 0);
 }

@@ -340,6 +340,25 @@ body {
     padding-block: 14px;
   }
 }
+
+/* --- screen transition animation --- */
+
+@keyframes screenFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-animate-in {
+  animation: screenFadeUp 220ms ease-out;
+}
+
+
 .hidden {
   display: none;
 }
