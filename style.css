@@ -316,6 +316,7 @@ body {
     gap: 8px;
   }
 
+
   .display {
     padding: 14px 16px;
     min-height: 130px;
@@ -341,7 +342,6 @@ body {
     padding-block: 14px;
   }
 }
-
 /* --- screen transition animation --- */
 
 @keyframes screenFadeUp {
@@ -395,15 +395,22 @@ body {
   width: 90%;
   max-width: 420px;
   color: white;
+
   max-height: 80vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+
 }
 
 .modal-table {
   margin-top: 12px;
   font-size: 0.85rem;
+
+  flex: 1;
+  min-height: 0;
   overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-table table {
@@ -423,6 +430,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  flex-shrink:  0;
 }
 
 
